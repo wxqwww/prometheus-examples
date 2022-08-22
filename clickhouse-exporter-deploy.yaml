@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickhouse-exporter
+  namespace: monitoring
+  labels:
+    app: clickhouse-exporter
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhouse-exporter
+  template:
+    metadata:
+      name: clickhouse-exporter
+      labels:
+        app: clickhouse-exporter
+    spec:
+      serviceAccountName: clickhouse-exporter
+      containers:
+      - name: clickhouse-exporter
+        image: f1yegor/clickhouse-exporter
+        imagePullPolicy: Never
+        args:
+        - '-scrape_uri=http://10.20.15.218:8123/'
+        - '-telemetry.address=:9116'
+        env:
+        - name: CLICKHOUSE_USER
+          value: test
+        - name: CLICKHOUSE_PASSWORD
+          value: test2022cs
+        ports:
+          - name: http
+            containerPort: 9116

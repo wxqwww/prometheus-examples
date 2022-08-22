@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: prometheus-core
+    namespace: monitoring
+data:
+    web-config.yaml: |
+        basic_auth_users: 
+          admin: $2b$12$VWT0PDFudoXe9RSvyG50au3kGt1kMtDRIC97r4wqJF2Th9W3V0AW6
+    prometheus.yaml: |
+        global:
+          scrape_interval: 15s
+          scrape_timeout: 15s
+          evaluation_interval: 15s
+        alerting:
+          alertmanagers:
+          - static_configs:
+            - targets: ["10.254.127.110:9093"]
+        rule_files:
+        - "/etc/prometheus-rules/*.yml"
+        scrape_configs:
+        - job_name: 'kubernetes-apiservers'
+          kubernetes_sd_configs:
+          - role: endpoints
+          scheme: https
+          tls_config:
+            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: default;kubernetes;https
+        - job_name: 'expoters'
+          kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: [monitoring]
+          scheme: https
+          tls_config:
+            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+          relabel_configs:
+          - source_labels: [__scheme__]
+            target_label: __scheme__
+            action: replace
+            regex: https
+            replacement: http
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: job
+            replacement: $1
+        - job_name: 'test-service'
+          kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: [test]
+          scheme: https
+          tls_config:
+            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: drop
+            regex: 91..
+          - source_labels: [__scheme__]
+            target_label: __scheme__
+            action: replace
+            regex: https
+            replacement: http
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: job
+            replacement: test-$1
+        - job_name: 'test-data-service'
+          kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: [test-data]
+          scheme: https
+          tls_config:
+            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: 9117
+          - source_labels: [__scheme__]
+            target_label: __scheme__
+            action: replace
+            regex: https
+            replacement: http
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: job
+            replacement: $1
+        - job_name: 'node-exporter'
+          scheme: http
+          static_configs:
+            - targets: 
+              - 10.20.15.211:9100
+              - 10.20.15.212:9100
+              - 10.20.15.213:9100
+              - 10.20.15.214:9100
+              - 10.20.15.215:9100
+              - 10.20.15.216:9100
+              - 10.20.15.217:9100
+              - 10.20.15.218:9100
+              - 10.20.15.160:9100
+              - 10.20.15.198:9100
+              - 10.20.15.199:9100

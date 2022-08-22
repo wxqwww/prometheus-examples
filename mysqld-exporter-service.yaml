@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: 'true'
+  name: mysqld-exporter
+  namespace: monitoring
+  labels:
+    app: mysqld-exporter
+spec:
+  ports:
+  - name: mysqld-exporter-1
+    port: 9104
+    protocol: TCP
+  - name: mysqld-exporter-2
+    port: 9105
+    protocol: TCP
+  - name: mysqld-exporter-3
+    port: 9105
+    protocol: TCP
+  selector:
+    app: mysqld-exporter

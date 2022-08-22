@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysqld-exporter
+  namespace: monitoring
+  labels:
+    app: mysqld-exporter
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysqld-exporter
+  template:
+    metadata:
+      name: mysqld-exporter
+      labels:
+        app: mysqld-exporter
+    spec:
+      serviceAccountName: mysqld-exporter
+      containers:
+      - name: mysqld-exporter-1
+        image: bitnami/mysqld-exporter
+        imagePullPolicy: Never
+        args:
+        - '--web.listen-address=:9104'
+        env:
+        - name: DATA_SOURCE_NAME
+          value: 'test:test12345!@(10.20.15.214:3306)/'
+        ports:
+          - name: http
+            containerPort: 9104
+      - name: mysqld-exporter-2
+        image: bitnami/mysqld-exporter
+        imagePullPolicy: Never
+        args:
+        - '--web.listen-address=:9105'
+        env:
+        - name: DATA_SOURCE_NAME
+          value: 'test:test12345!@(10.20.15.215:3306)/'
+        ports:
+          - name: http
+            containerPort: 9105
+      - name: mysqld-exporter-3
+        image: bitnami/mysqld-exporter
+        imagePullPolicy: Never
+        args:
+        - '--web.listen-address=:9106'
+        env:
+        - name: DATA_SOURCE_NAME
+          value: 'test:test12345!@(10.20.15.216:3306)/'
+        ports:
+          - name: http
+            containerPort: 9106
